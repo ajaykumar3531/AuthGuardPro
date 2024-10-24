@@ -20,4 +20,8 @@
     <ProjectReference Include="..\AuthGuardPro_Infrastucture\AuthGuardPro_Infrastucture.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Controllers\" />
+  </ItemGroup>
+
 </Project>

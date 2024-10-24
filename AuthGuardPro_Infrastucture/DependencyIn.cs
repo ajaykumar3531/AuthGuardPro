@@ -1,4 +1,6 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using AuthGuardPro_Infrastucture.Repository.Contracts;
+using AuthGuardPro_Infrastucture.Repository.Services;
+using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,8 +13,11 @@ namespace AuthGuardPro_Infrastucture
     {
         public static IServiceCollection InfraDI(this IServiceCollection services)
         {
+            // Register the repository for dependency injection
+            services.AddScoped(typeof(IBaseRepository<>), typeof(BaseRepository<>));
 
             return services;
         }
     }
+
 }
