@@ -1,4 +1,5 @@
-﻿using AuthGuardPro_Infrastucture.Repository.Contracts;
+﻿using AuthGuardPro_Domain.Entities;
+using AuthGuardPro_Infrastucture.Repository.Contracts;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -8,12 +9,12 @@ using System.Threading.Tasks;
 
 namespace AuthGuardPro_Infrastucture.Repository.Services
 {
-    public class BaseRepository<T> : IBaseRepository<T> where T : class
+    public class BaseRepository<T> : IBaseRepository<T> where T :  class
     {
-        private readonly DbContext _context;
+        private readonly UsersContext _context;
         private readonly DbSet<T> _dbSet;
 
-        public BaseRepository(DbContext context)
+        public BaseRepository(UsersContext context)
         {
             _context = context;
             _dbSet = context.Set<T>();

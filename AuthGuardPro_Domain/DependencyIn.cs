@@ -1,4 +1,7 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using AuthGuardPro_Domain.Entities;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,7 +14,7 @@ namespace AuthGuardPro_Core
     {
         public static IServiceCollection CoreDI(this IServiceCollection services)
         {
-
+            //services.AddDbContext<UsersContext>();
             return services;
         }
     }
