@@ -39,4 +39,25 @@ public class UsersController : ControllerBase
             throw ex;
         }
     }
+
+    [HttpPost("Login")]
+    public async Task<IActionResult> LoginUser(LoginUserRequest request)
+    {
+        LoginUserResponse response = null;
+        try
+        {
+            response = await _userService.LoginUser(request);
+
+            if (response.StatusCode == StatusCodes.Status200OK && !string.IsNullOrEmpty(response.StatusMessage))
+                return Ok(response);
+            else if (response.StatusCode != StatusCodes.Status200OK || string.IsNullOrEmpty(response.StatusMessage))
+                return BadRequest(response);
+            else
+                return BadRequest(response);
+        }
+        catch (Exception ex)
+        {
+            throw ex;
+        }
+    }
 }

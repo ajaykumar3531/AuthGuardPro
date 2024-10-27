@@ -15,9 +15,11 @@ namespace AuthGuardPro_Application.Repos.Services
     public class UserService : IUserService
     {
         private readonly IBaseRepository<User> _userContext;
-        public UserService(IBaseRepository<User> userContext)
+        private readonly IJWTTokenGeneration _JWTTokenGeneration;
+        public UserService(IBaseRepository<User> userContext, IJWTTokenGeneration jWTTokenGeneration)
         {
             _userContext = userContext;
+            _JWTTokenGeneration = jWTTokenGeneration;
         }
         public async Task<CreateUserResponse> CreateUser(CreateUserRequest request)
         {
@@ -42,10 +44,10 @@ namespace AuthGuardPro_Application.Repos.Services
                     }
                     else
                     {
-                        // Generate a valid BCrypt salt
+
                         string salt = BCrypt.Net.BCrypt.GenerateSalt(12);
 
-                        string hashedPassword = BCrypt.Net.BCrypt.HashPassword(request.Password, salt);
+                        string hashedPassword = BCrypt.Net.BCrypt.HashPassword(request.Password + salt);
 
                         var userData = new User()
                         {
@@ -83,6 +85,64 @@ namespace AuthGuardPro_Application.Repos.Services
             }
         }
 
+        public async Task<LoginUserResponse> LoginUser(LoginUserRequest request)
+        {
+            LoginUserResponse response = new LoginUserResponse();
+            try
+            {
+                if (request == null)
+                {
+                    response.StatusCode = StatusCodes.Status204NoContent;
+                    response.StatusMessage = Constants.MSG_REQ_NULL;
+                }
+                else
+                {
+                    User existedUserData = (await _userContext.GetAllAsync())?.FirstOrDefault(x => x.Username.ToLower() == request.Username.ToLower() && x.Email.ToLower() == request.Email);
 
+                    if (existedUserData != null)
+                    {
+                        string salt = existedUserData.Salt;
+                        bool verifyPassword = BCrypt.Net.BCrypt.Verify(request.Password + salt, existedUserData.PasswordHash);
+
+                        if (verifyPassword)
+                        {
+                            TokenRequest tokenRequest = new TokenRequest()
+                            {
+                                Email = existedUserData.Email,
+                                UserID = existedUserData.UserId.ToString(),
+                                UserName = existedUserData.Username 
+                            };
+
+
+                            response.JWTToken = await _JWTTokenGeneration.TokenGeneration(tokenRequest);
+                            response.Username = request.Username;
+                            response.Email = request.Email;
+                            response.StatusMessage = Constants.MSG_LOGIN_SUCC;
+                            response.StatusCode = StatusCodes.Status200OK;
+                        }
+                        else
+                        {
+                            response.Username = request.Username;
+                            response.Email = request.Email;
+                            response.StatusCode = StatusCodes.Status400BadRequest;
+                            response.StatusMessage = Constants.MSG_LOGIN_FAIL;
+                        }
+                    }
+                    else
+                    {
+                        response.Username = request.Username;
+                        response.Email = request.Email;
+                        response.StatusMessage = Constants.MSG_NO_DATA_FOUND;
+                        response.StatusCode = StatusCodes.Status404NotFound;
+                    }
+                }
+                return response;
+            }
+            catch (Exception ex)
+            {
+
+                throw ex;
+            }
+        }
     }
 }
