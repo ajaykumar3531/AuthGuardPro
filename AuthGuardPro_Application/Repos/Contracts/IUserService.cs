@@ -7,5 +7,7 @@ namespace AuthGuardPro_Application.Repos.Contracts
     {
         Task<CreateUserResponse> CreateUser(CreateUserRequest request);
         Task<LoginUserResponse> LoginUser(LoginUserRequest request);
+        Task<ForgotPasswordResponse> ForgotPassword(ForgotPasswordRequest request);
+        Task<DeleteResponse> DeleteUser(DeleteRequest request);
     }
 }

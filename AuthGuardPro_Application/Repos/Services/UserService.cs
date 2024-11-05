@@ -21,6 +21,7 @@ namespace AuthGuardPro_Application.Repos.Services
             _userContext = userContext;
             _JWTTokenGeneration = jWTTokenGeneration;
         }
+
         public async Task<CreateUserResponse> CreateUser(CreateUserRequest request)
         {
             try
@@ -36,7 +37,11 @@ namespace AuthGuardPro_Application.Repos.Services
 
                 if (request != null)
                 {
-                    var existedUser = (await _userContext.GetAllAsync())?.ToList()?.FirstOrDefault(x => x.Username.ToLower() == request.Username.ToLower() || x.Email.ToLower() == request.Email);
+                    var existedUser = (await _userContext.GetAllAsync())?.ToList()?
+                        .FirstOrDefault(x => 
+                        (x.Username.ToLower() == request.Username.ToLower() || x.Email.ToLower() == request.Email.ToLower()) && x.IsDeleted == false);
+
+
                     if (existedUser != null)
                     {
                         response.StatusMessage = Constants.MSG_DATA_FOUND;
@@ -84,7 +89,110 @@ namespace AuthGuardPro_Application.Repos.Services
                 throw; // Re-throwing the exception can be useful for higher-level error handling
             }
         }
+        public async Task<DeleteResponse> DeleteUser(DeleteRequest request)
+        {
+            DeleteResponse response = new DeleteResponse();
+            try
+            {
+                if (request == null)
+                {
+                    response.StatusCode = StatusCodes.Status204NoContent;
+                    response.StatusMessage = Constants.MSG_REQ_NULL;
+                    return response;
+                }
 
+                User existedUser = (await _userContext.GetAllAsync())?.ToList()?.FirstOrDefault(x => x.Username.ToLower() == request.Username.ToLower() && x.Email.ToLower() == request.Email.ToLower() && x.IsDeleted == false);
+
+                if (existedUser != null)
+                {
+                    existedUser.IsDeleted = true;
+                    existedUser.DateUpdated = DateTime.Now;
+                    await _userContext.UpdateAsync(existedUser);
+
+                    if (await _userContext.SaveChangesAsync() > 0)
+                    {
+                        response.Username = request.Username;
+                        response.Email = request.Email;
+                        response.StatusMessage = Constants.MSG_SUCCESS;
+                        response.StatusCode = StatusCodes.Status200OK;
+                    }
+                    else
+                    {
+                        response.Username = request.Username;
+                        response.Email = request.Email;
+                        response.StatusMessage = Constants.MSG_NO_DATA_FOUND;
+                        response.StatusCode = StatusCodes.Status404NotFound;
+                    }
+
+                }
+                else
+                {
+                    response.Username = request.Username;
+                    response.Email = request.Email;
+                    response.StatusMessage = Constants.MSG_NO_DATA_FOUND;
+                    response.StatusCode = StatusCodes.Status404NotFound;
+                }
+                return response;
+            }
+            catch (Exception ex)
+            {
+                throw;
+            }
+        }
+        public async Task<ForgotPasswordResponse> ForgotPassword(ForgotPasswordRequest request)
+        {
+            ForgotPasswordResponse response= new ForgotPasswordResponse();
+            try
+            {
+                if (request == null)
+                {
+                    response.StatusCode = StatusCodes.Status204NoContent;
+                    response.StatusMessage = Constants.MSG_REQ_NULL;
+                    return response;
+                }
+
+                User existedUser = (await _userContext.GetAllAsync())?.ToList()?.FirstOrDefault(x=>x.Username.ToLower() == request.Username.ToLower() && x.Email.ToLower() == request.Email.ToLower() && x.IsDeleted == false);
+
+                if (existedUser != null) {
+
+                    string salt = BCrypt.Net.BCrypt.GenerateSalt(12);
+
+                    string hashedPassword = BCrypt.Net.BCrypt.HashPassword(request.Password + salt);
+
+                    existedUser.PasswordHash = hashedPassword;
+                    existedUser.Salt = salt;
+                    existedUser.DateUpdated = DateTime.Now;
+                    await _userContext.UpdateAsync(existedUser);
+
+                    if(await _userContext.SaveChangesAsync() > 0)
+                    {
+                        response.Username = request.Username;
+                        response.Email = request.Email;
+                        response.StatusMessage = Constants.MSG_SUCCESS;
+                        response.StatusCode = StatusCodes.Status200OK;
+                    }
+                    else
+                    {
+                        response.Username = request.Username;
+                        response.Email = request.Email;
+                        response.StatusMessage = Constants.MSG_NO_DATA_FOUND;
+                        response.StatusCode = StatusCodes.Status404NotFound;
+                    }
+
+                }
+                else
+                {
+                    response.Username = request.Username;
+                    response.Email = request.Email;
+                    response.StatusMessage = Constants.MSG_NO_DATA_FOUND;
+                    response.StatusCode = StatusCodes.Status404NotFound;
+                }
+                return response;
+            }
+            catch (Exception ex) { 
+                throw;
+            }
+        }
         public async Task<LoginUserResponse> LoginUser(LoginUserRequest request)
         {
             LoginUserResponse response = new LoginUserResponse();
@@ -97,7 +205,7 @@ namespace AuthGuardPro_Application.Repos.Services
                 }
                 else
                 {
-                    User existedUserData = (await _userContext.GetAllAsync())?.FirstOrDefault(x => x.Username.ToLower() == request.Username.ToLower() && x.Email.ToLower() == request.Email);
+                    User existedUserData = (await _userContext.GetAllAsync())?.FirstOrDefault(x => x.Username.ToLower() == request.Username.ToLower() && x.Email.ToLower() == request.Email && x.IsDeleted == false);
 
                     if (existedUserData != null)
                     {

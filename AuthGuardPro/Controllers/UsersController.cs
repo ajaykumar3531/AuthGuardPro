@@ -20,7 +20,7 @@ public class UsersController : ControllerBase
     /// </summary>
     /// <param name="request">The user creation request containing username, email, and password.</param>
     /// <returns>A response containing the created user's details.</returns>
-    [Authorize]
+    [AllowAnonymous]
     [HttpPost("create")]
     public async Task<IActionResult> CreateUser(CreateUserRequest request)
     {
@@ -37,6 +37,8 @@ public class UsersController : ControllerBase
             return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
         }
     }
+
+
 
     /// <summary>
     /// Logs in a user. No authorization required.
@@ -60,4 +62,43 @@ public class UsersController : ControllerBase
             return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
         }
     }
+
+    [Authorize]
+    [HttpPost("ForgotPassword")]
+    public async Task<IActionResult> ForgotPassword(ForgotPasswordRequest request)
+    {
+        try
+        {
+            var response = await _userService.ForgotPassword(request);
+            if (response.StatusCode == StatusCodes.Status200OK && !string.IsNullOrEmpty(response.StatusMessage))
+                return Ok(response);
+            else
+                return BadRequest(response);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
+        }
+    }
+
+
+    [Authorize]
+    [HttpPost("DeleteAccount")]
+    public async Task<IActionResult> DeleteAccount(DeleteRequest request)
+    {
+        try
+        {
+            var response = await _userService.DeleteUser(request);
+            if (response.StatusCode == StatusCodes.Status200OK && !string.IsNullOrEmpty(response.StatusMessage))
+                return Ok(response);
+            else
+                return BadRequest(response);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
+        }
+    }
+
+
 }
