@@ -22,78 +22,95 @@ namespace AuthGuardPro_Application.Repos.Services
             _JWTTokenGeneration = jWTTokenGeneration;
         }
 
+        /// <summary>
+        /// Creates a new user based on the provided request data.
+        /// Checks if a user with the same username or email already exists.
+        /// If not, creates a new user with a salted and hashed password, then saves it to the database.
+        /// </summary>
+        /// <param name="request">The user creation request containing username, email, and password.</param>
+        /// <returns>A task that represents the asynchronous operation, with a response containing user details or an error status.</returns>
         public async Task<CreateUserResponse> CreateUser(CreateUserRequest request)
         {
             try
             {
-
                 CreateUserResponse response = new CreateUserResponse();
 
+                // Check if the request is null and return a no content response if it is.
                 if (request == null)
                 {
                     response.StatusCode = StatusCodes.Status204NoContent;
                     response.StatusMessage = Constants.MSG_REQ_NULL;
+                    return response;
                 }
 
-                if (request != null)
-                {
-                    var existedUser = (await _userContext.GetAllAsync())?.ToList()?
-                        .FirstOrDefault(x => 
+                // Check if a user with the same username or email already exists and is not marked as deleted.
+                var existedUser = (await _userContext.GetAllAsync())?.ToList()?
+                    .FirstOrDefault(x =>
                         (x.Username.ToLower() == request.Username.ToLower() || x.Email.ToLower() == request.Email.ToLower()) && x.IsDeleted == false);
 
+                if (existedUser != null)
+                {
+                    // If the user exists, return a response indicating that the user data was found.
+                    response.StatusMessage = Constants.MSG_DATA_FOUND;
+                    response.StatusCode = StatusCodes.Status302Found;
+                }
+                else
+                {
+                    // Generate a salt and hash the password with the salt for secure storage.
+                    string salt = BCrypt.Net.BCrypt.GenerateSalt(12);
+                    string hashedPassword = BCrypt.Net.BCrypt.HashPassword(request.Password + salt);
 
-                    if (existedUser != null)
+                    // Create a new user object with the provided details and hashed password.
+                    var userData = new User()
                     {
-                        response.StatusMessage = Constants.MSG_DATA_FOUND;
-                        response.StatusCode = StatusCodes.Status302Found;
+                        Username = request.Username,
+                        Email = request.Email,
+                        IsDeleted = false,
+                        PasswordHash = hashedPassword,
+                        Salt = salt,
+                    };
+
+                    // Add the new user to the context and save changes.
+                    await _userContext.AddAsync(userData);
+                    if (await _userContext.SaveChangesAsync() > 0)
+                    {
+                        // If successful, populate the response with the user's details and success status.
+                        response.UserId = userData.UserId;  // Assuming UserID is a UNIQUEIDENTIFIER
+                        response.Username = userData.Username;
+                        response.Email = userData.Email;
+                        response.DateCreated = userData.DateCreated;
+                        response.StatusMessage = Constants.MSG_USER_ADD;
+                        response.StatusCode = StatusCodes.Status200OK;
                     }
                     else
                     {
-
-                        string salt = BCrypt.Net.BCrypt.GenerateSalt(12);
-
-                        string hashedPassword = BCrypt.Net.BCrypt.HashPassword(request.Password + salt);
-
-                        var userData = new User()
-                        {
-                            Username = request.Username,
-                            Email = request.Email,
-                            IsDeleted = false,
-                            PasswordHash = hashedPassword,
-                            Salt = salt,
-                        };
-                        await _userContext.AddAsync(userData);
-                        if (await _userContext.SaveChangesAsync() > 0)
-                        {
-                            response.UserId = userData.UserId;  // Assuming UserID is a UNIQUEIDENTIFIER
-                            response.Username = userData.Username;
-                            response.Email = userData.Email;
-                            response.DateCreated = userData.DateCreated;
-                            response.StatusMessage = Constants.MSG_USER_ADD;
-                            response.StatusCode = StatusCodes.Status200OK;
-                        }
-                        else
-                        {
-                            response.StatusCode = StatusCodes.Status204NoContent;
-                            response.StatusMessage = Constants.MSG_REQ_NULL;
-                        }
+                        // If save fails, set response to no content status.
+                        response.StatusCode = StatusCodes.Status204NoContent;
+                        response.StatusMessage = Constants.MSG_REQ_NULL;
                     }
                 }
 
-
-                return response; // Return the populated response
+                return response; // Return the populated response.
             }
             catch (Exception ex)
             {
-                // Log the exception or handle it as needed
-                throw; // Re-throwing the exception can be useful for higher-level error handling
+                // Log the exception or handle it as needed. Re-throwing it can help with higher-level error handling.
+                throw;
             }
         }
+
+        /// <summary>
+        /// Deletes a user by marking the user as deleted in the database based on the provided request data.
+        /// Finds the user by matching username and email and updates the record to mark it as deleted if found.
+        /// </summary>
+        /// <param name="request">The delete request containing username and email.</param>
+        /// <returns>A task representing the asynchronous operation, with a response indicating success or failure status.</returns>
         public async Task<DeleteResponse> DeleteUser(DeleteRequest request)
         {
             DeleteResponse response = new DeleteResponse();
             try
             {
+                // Check if the request is null and return a no content response if it is.
                 if (request == null)
                 {
                     response.StatusCode = StatusCodes.Status204NoContent;
@@ -101,16 +118,24 @@ namespace AuthGuardPro_Application.Repos.Services
                     return response;
                 }
 
-                User existedUser = (await _userContext.GetAllAsync())?.ToList()?.FirstOrDefault(x => x.Username.ToLower() == request.Username.ToLower() && x.Email.ToLower() == request.Email.ToLower() && x.IsDeleted == false);
+                // Find an existing user by username and email who is not already marked as deleted.
+                User existedUser = (await _userContext.GetAllAsync())?.ToList()?
+                    .FirstOrDefault(x =>
+                        x.Username.ToLower() == request.Username.ToLower() &&
+                        x.Email.ToLower() == request.Email.ToLower() &&
+                        x.IsDeleted == false);
 
                 if (existedUser != null)
                 {
+                    // Mark the user as deleted and update the timestamp.
                     existedUser.IsDeleted = true;
                     existedUser.DateUpdated = DateTime.Now;
                     await _userContext.UpdateAsync(existedUser);
 
+                    // Save changes and check if the deletion was successful.
                     if (await _userContext.SaveChangesAsync() > 0)
                     {
+                        // Populate response with success status and user details.
                         response.Username = request.Username;
                         response.Email = request.Email;
                         response.StatusMessage = Constants.MSG_SUCCESS;
@@ -118,32 +143,43 @@ namespace AuthGuardPro_Application.Repos.Services
                     }
                     else
                     {
+                        // If saving changes failed, return a not found status.
                         response.Username = request.Username;
                         response.Email = request.Email;
                         response.StatusMessage = Constants.MSG_NO_DATA_FOUND;
                         response.StatusCode = StatusCodes.Status404NotFound;
                     }
-
                 }
                 else
                 {
+                    // If no matching user is found, return a not found status.
                     response.Username = request.Username;
                     response.Email = request.Email;
                     response.StatusMessage = Constants.MSG_NO_DATA_FOUND;
                     response.StatusCode = StatusCodes.Status404NotFound;
                 }
-                return response;
+
+                return response; // Return the populated response.
             }
             catch (Exception ex)
             {
+                // Log or handle the exception as needed. Re-throwing allows higher-level error handling.
                 throw;
             }
         }
+
+        /// <summary>
+        /// Resets the password for an existing user based on the provided request data.
+        /// Finds the user by matching username and email, generates a new salted and hashed password, and updates the record.
+        /// </summary>
+        /// <param name="request">The forgot password request containing username, email, and new password.</param>
+        /// <returns>A task representing the asynchronous operation, with a response indicating success or failure status.</returns>
         public async Task<ForgotPasswordResponse> ForgotPassword(ForgotPasswordRequest request)
         {
-            ForgotPasswordResponse response= new ForgotPasswordResponse();
+            ForgotPasswordResponse response = new ForgotPasswordResponse();
             try
             {
+                // Check if the request is null and return a no content response if it is.
                 if (request == null)
                 {
                     response.StatusCode = StatusCodes.Status204NoContent;
@@ -151,21 +187,29 @@ namespace AuthGuardPro_Application.Repos.Services
                     return response;
                 }
 
-                User existedUser = (await _userContext.GetAllAsync())?.ToList()?.FirstOrDefault(x=>x.Username.ToLower() == request.Username.ToLower() && x.Email.ToLower() == request.Email.ToLower() && x.IsDeleted == false);
+                // Find an existing user by username and email who is not already marked as deleted.
+                User existedUser = (await _userContext.GetAllAsync())?.ToList()?
+                    .FirstOrDefault(x =>
+                        x.Username.ToLower() == request.Username.ToLower() &&
+                        x.Email.ToLower() == request.Email.ToLower() &&
+                        x.IsDeleted == false);
 
-                if (existedUser != null) {
-
+                if (existedUser != null)
+                {
+                    // Generate a new salt and hash the new password with the salt.
                     string salt = BCrypt.Net.BCrypt.GenerateSalt(12);
-
                     string hashedPassword = BCrypt.Net.BCrypt.HashPassword(request.Password + salt);
 
+                    // Update the user with the new password hash, salt, and timestamp.
                     existedUser.PasswordHash = hashedPassword;
                     existedUser.Salt = salt;
                     existedUser.DateUpdated = DateTime.Now;
                     await _userContext.UpdateAsync(existedUser);
 
-                    if(await _userContext.SaveChangesAsync() > 0)
+                    // Save changes and check if the password reset was successful.
+                    if (await _userContext.SaveChangesAsync() > 0)
                     {
+                        // Populate response with success status and user details.
                         response.Username = request.Username;
                         response.Email = request.Email;
                         response.StatusMessage = Constants.MSG_SUCCESS;
@@ -173,26 +217,31 @@ namespace AuthGuardPro_Application.Repos.Services
                     }
                     else
                     {
+                        // If saving changes failed, return a not found status.
                         response.Username = request.Username;
                         response.Email = request.Email;
                         response.StatusMessage = Constants.MSG_NO_DATA_FOUND;
                         response.StatusCode = StatusCodes.Status404NotFound;
                     }
-
                 }
                 else
                 {
+                    // If no matching user is found, return a not found status.
                     response.Username = request.Username;
                     response.Email = request.Email;
                     response.StatusMessage = Constants.MSG_NO_DATA_FOUND;
                     response.StatusCode = StatusCodes.Status404NotFound;
                 }
-                return response;
+
+                return response; // Return the populated response.
             }
-            catch (Exception ex) { 
+            catch (Exception ex)
+            {
+                // Log or handle the exception as needed. Re-throwing allows higher-level error handling.
                 throw;
             }
         }
+
         public async Task<LoginUserResponse> LoginUser(LoginUserRequest request)
         {
             LoginUserResponse response = new LoginUserResponse();
