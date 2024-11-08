@@ -21,7 +21,7 @@ namespace AuthGuardPro_Application
             services.AddScoped<IJWTTokenGeneration, JWTTokenGeneration>();
             services.AddScoped<IUserService, UserService>();
             services.AddScoped<IBaseRepository<User>, BaseRepository<User>>();
-
+            services.AddScoped<ILogger, Logger>();
 
             return services;
         }

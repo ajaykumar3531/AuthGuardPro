@@ -16,10 +16,12 @@ namespace AuthGuardPro_Application.Repos.Services
     {
         private readonly IBaseRepository<User> _userContext;
         private readonly IJWTTokenGeneration _JWTTokenGeneration;
-        public UserService(IBaseRepository<User> userContext, IJWTTokenGeneration jWTTokenGeneration)
+        private readonly ILogger _logger;
+        public UserService(IBaseRepository<User> userContext, IJWTTokenGeneration jWTTokenGeneration, ILogger logger)
         {
             _userContext = userContext;
             _JWTTokenGeneration = jWTTokenGeneration;
+            _logger = logger;
         }
 
         /// <summary>
@@ -94,6 +96,7 @@ namespace AuthGuardPro_Application.Repos.Services
             }
             catch (Exception ex)
             {
+                _logger.LocalLogs(ex);
                 // Log the exception or handle it as needed. Re-throwing it can help with higher-level error handling.
                 throw;
             }
@@ -163,6 +166,7 @@ namespace AuthGuardPro_Application.Repos.Services
             }
             catch (Exception ex)
             {
+                _logger.LocalLogs(ex);
                 // Log or handle the exception as needed. Re-throwing allows higher-level error handling.
                 throw;
             }
@@ -237,6 +241,7 @@ namespace AuthGuardPro_Application.Repos.Services
             }
             catch (Exception ex)
             {
+                _logger.LocalLogs(ex);
                 // Log or handle the exception as needed. Re-throwing allows higher-level error handling.
                 throw;
             }
@@ -297,7 +302,7 @@ namespace AuthGuardPro_Application.Repos.Services
             }
             catch (Exception ex)
             {
-
+                _logger.LocalLogs(ex);
                 throw ex;
             }
         }
