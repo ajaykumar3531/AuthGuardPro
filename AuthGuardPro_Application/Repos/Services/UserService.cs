@@ -15,12 +15,12 @@ namespace AuthGuardPro_Application.Repos.Services
     public class UserService : IUserService
     {
         private readonly IBaseRepository<User> _userContext;
-        private readonly IJWTTokenGeneration _JWTTokenGeneration;
-        private readonly ILogger _logger;
-        public UserService(IBaseRepository<User> userContext, IJWTTokenGeneration jWTTokenGeneration, ILogger logger)
+        private readonly IAuthService _authService;
+        private readonly ILoggerService _logger;
+        public UserService(IBaseRepository<User> userContext, IAuthService authService, ILoggerService logger)
         {
             _userContext = userContext;
-            _JWTTokenGeneration = jWTTokenGeneration;
+            _authService = authService;
             _logger = logger;
         }
 
@@ -276,7 +276,7 @@ namespace AuthGuardPro_Application.Repos.Services
                             };
 
 
-                            response.JWTToken = await _JWTTokenGeneration.TokenGeneration(tokenRequest);
+                            response.JWTToken = await _authService.TokenGeneration(tokenRequest);
                             response.Username = request.Username;
                             response.Email = request.Email;
                             response.StatusMessage = Constants.MSG_LOGIN_SUCC;

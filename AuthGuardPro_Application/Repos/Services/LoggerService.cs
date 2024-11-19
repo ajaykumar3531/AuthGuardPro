@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace AuthGuardPro_Application.Repos.Services
 {
-    public class Logger : ILogger
+    public class LoggerService : ILoggerService
     {
         public async Task LocalLogs(Exception ex)
         {

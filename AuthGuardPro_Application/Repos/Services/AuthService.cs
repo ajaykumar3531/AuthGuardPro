@@ -1,6 +1,7 @@
 ﻿using AuthGuardPro_Application.DTO_s.Requests;
 using AuthGuardPro_Application.Repos.Contracts;
 using AuthGuardPro_Domain.Entities;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using System;
@@ -14,15 +15,20 @@ using System.Threading.Tasks;
 namespace AuthGuardPro_Application.Repos.Services
 {
     // This service implements the IJWTTokenGeneration interface, providing a method to generate JWT tokens
-    public class JWTTokenGeneration : IJWTTokenGeneration
+    public class AuthService : IAuthService
     {
         private readonly IConfiguration _configuration; // IConfiguration instance to access app settings
 
+       // private readonly IHttpContextAccessor _httpContextAccessor;
+
         // Constructor that accepts IConfiguration to access JWT settings from app configuration
-        public JWTTokenGeneration(IConfiguration configuration)
+        public AuthService(IConfiguration configuration)
         {
             _configuration = configuration;
+         
         }
+
+
 
         // Asynchronous method to generate a JWT token based on the provided TokenRequest
         public async Task<string> TokenGeneration(TokenRequest request)
@@ -67,5 +73,19 @@ namespace AuthGuardPro_Application.Repos.Services
             // Serialize the token into a JWT string and return it to the caller
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
+
+
+        public async Task AuthorizeUser()
+        {
+            try
+            {
+
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+        }
+
     }
 }

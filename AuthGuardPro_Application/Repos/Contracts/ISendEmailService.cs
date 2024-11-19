@@ -6,8 +6,7 @@ using System.Threading.Tasks;
 
 namespace AuthGuardPro_Application.Repos.Contracts
 {
-    public interface ILogger
+    public interface ISendEmailService
     {
-        Task LocalLogs(Exception ex);
     }
 }

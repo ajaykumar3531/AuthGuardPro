@@ -7,8 +7,10 @@ using System.Threading.Tasks;
 
 namespace AuthGuardPro_Application.Repos.Contracts
 {
-    public interface IJWTTokenGeneration
+    public interface IAuthService
     {
         Task<string> TokenGeneration(TokenRequest request);
+
+        Task AuthorizeUser(); 
     }
 }

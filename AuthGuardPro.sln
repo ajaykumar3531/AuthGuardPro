@@ -3,13 +3,13 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.12.35417.141
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AuthGuardPro", "AuthGuardPro\AuthGuardPro.csproj", "{CB137601-5580-49DF-8484-92851167790C}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StayEasePro", "AuthGuardPro\StayEasePro.csproj", "{CB137601-5580-49DF-8484-92851167790C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AuthGuardPro_Core", "AuthGuardPro_Domain\AuthGuardPro_Core.csproj", "{33C86B9C-2E2C-4E98-9726-FF324D8F9A82}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StayEasePro_Core", "AuthGuardPro_Domain\StayEasePro_Core.csproj", "{33C86B9C-2E2C-4E98-9726-FF324D8F9A82}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AuthGuardPro_Application", "AuthGuardPro_Application\AuthGuardPro_Application.csproj", "{DC161F3C-2692-429D-93FC-6E8DE9D6FECA}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StayEasePro_Application", "AuthGuardPro_Application\StayEasePro_Application.csproj", "{DC161F3C-2692-429D-93FC-6E8DE9D6FECA}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AuthGuardPro_Infrastucture", "AuthGuardPro_Infrastucture\AuthGuardPro_Infrastucture.csproj", "{80D52010-94F0-4057-899C-F922D166BD72}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StayEasePro_Infrastucture", "AuthGuardPro_Infrastucture\StayEasePro_Infrastucture.csproj", "{80D52010-94F0-4057-899C-F922D166BD72}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

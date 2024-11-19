@@ -18,10 +18,10 @@ namespace AuthGuardPro_Application
         {
             // Register the repository for dependency injection
             // Register your repositories and services
-            services.AddScoped<IJWTTokenGeneration, JWTTokenGeneration>();
+            services.AddScoped<IAuthService, AuthService>();
             services.AddScoped<IUserService, UserService>();
             services.AddScoped<IBaseRepository<User>, BaseRepository<User>>();
-            services.AddScoped<ILogger, Logger>();
+            services.AddScoped<ILoggerService, LoggerService>();
 
             return services;
         }
